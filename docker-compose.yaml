@@ -1,0 +1,54 @@
+networks:
+  default:
+    name: "lastmily-assignment"
+
+volumes:
+  mysql-data:
+
+services:
+  database:
+    image: mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: lastmily
+    ports:
+      - ${DB_PORT:-3306}:3306
+    volumes:
+      - mysql-data:/var/lib/mysql
+    container_name: database
+    networks:
+      - default
+    healthcheck:
+      test: "mysqladmin ping -u root -proot"
+      retries: 3
+      interval: 5s
+      timeout: 10s
+
+  php:
+    build:
+      context: docker/php
+    container_name: php
+    ports:
+      - ${HTTP_PORT:-80}:80
+    volumes:
+      - ./app/:/var/www/html/
+    depends_on:
+      database:
+        condition: service_started
+    networks:
+      - default
+
+  rabbitmq:
+    image: rabbitmq:management
+    restart: always
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-guest}
+    container_name: rabbitmq
+    ports:
+      - ${RABBITMQ_DEFAULT_SSL_PORT:-5671}:5671
+      - ${RABBITMQ_PORT_HOST:-5672}:5672
+      - ${RABBITMQ_PORT_HTTP:-15672}:15672
+    networks:
+      - default
