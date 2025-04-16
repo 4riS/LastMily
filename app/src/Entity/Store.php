@@ -9,7 +9,7 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity]
-final class Store
+class Store
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
