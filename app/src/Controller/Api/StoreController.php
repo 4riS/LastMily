@@ -9,6 +9,7 @@ use App\Message\StoreViewedMessage;
 use App\Repository\StoreRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Routing\Annotation\Route;
 
@@ -21,9 +22,17 @@ final class StoreController extends AbstractController
     ) {}
 
     #[Route('', name: 'get_stores', methods: ['GET'])]
-    public function getStores(): JsonResponse
+    public function getStores(Request $request): JsonResponse
     {
-        $stores = $this->storeRepo->findAll();
+        $search = $request->query->get('search');
+        $sort = $request->query->get('sort', 'id');
+        $direction = strtolower($request->query->get('direction', 'desc'));
+
+        if (!in_array($direction, ['asc', 'desc'])) {
+            $direction = 'desc';
+        }
+
+        $stores = $this->storeRepo->findWithFilters($search, $sort, $direction);
         $result = [];
 
         foreach ($stores as $store) {

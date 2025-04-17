@@ -31,4 +31,22 @@ final class StoreRepository extends ServiceEntityRepository
         $queryResult = $stmt->executeQuery(['storeId' => $store->getId()]);
         return $queryResult->fetchAssociative();
     }
+
+    public function findWithFilters(?string $search, string $sort, string $direction): array
+    {
+        $qb = $this->createQueryBuilder('s');
+
+        if ($search) {
+            $qb->andWhere('s.title LIKE :search OR s.description LIKE :search')
+                ->setParameter('search', '%' . $search . '%');
+        }
+
+        if (in_array($sort, ['title', 'created_at'])) {
+            $qb->orderBy('s.' . $sort, $direction);
+        } else {
+            $qb->orderBy('s.created_at', 'DESC');
+        }
+
+        return $qb->getQuery()->getResult();
+    }
 }
